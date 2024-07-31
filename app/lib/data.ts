@@ -18,8 +18,8 @@ export async function fetchRevenue() {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
 
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log('Fetching revenue data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
@@ -34,6 +34,7 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     const data = await sql<LatestInvoiceRaw>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
       FROM invoices
@@ -93,29 +94,28 @@ export async function fetchFilteredInvoices(
   currentPage: number,
 ) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
-
   try {
     const invoices = await sql<InvoicesTable>`
-      SELECT
-        invoices.id,
-        invoices.amount,
-        invoices.date,
-        invoices.status,
-        customers.name,
-        customers.email,
-        customers.image_url
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
+    SELECT
+    invoices.id,
+    invoices.amount,
+    invoices.date,
+    invoices.status,
+    customers.name,
+    customers.email,
+    customers.image_url
+    FROM invoices
+    JOIN customers ON invoices.customer_id = customers.id
+    WHERE
+    customers.name ILIKE ${`%${query}%`} OR
+    customers.email ILIKE ${`%${query}%`} OR
         invoices.amount::text ILIKE ${`%${query}%`} OR
         invoices.date::text ILIKE ${`%${query}%`} OR
         invoices.status ILIKE ${`%${query}%`}
       ORDER BY invoices.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
-
+      `;
+      
     return invoices.rows;
   } catch (error) {
     console.error('Database Error:', error);
@@ -145,6 +145,7 @@ export async function fetchInvoicesPages(query: string) {
 }
 
 export async function fetchInvoiceById(id: string) {
+  //noStore()
   try {
     const data = await sql<InvoiceForm>`
       SELECT
@@ -162,6 +163,7 @@ export async function fetchInvoiceById(id: string) {
       amount: invoice.amount / 100,
     }));
 
+    console.log(invoice);
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
